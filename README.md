@@ -1,7 +1,11 @@
 # my_scripts
 
 ## producer.py
-Script requires path to file as first parameter that contains json description for kafka message
+Script produces message configured with file <br/>
+> -f path/to/file - required, set path to message configuration file <br/>
+> -h host:port - option, default localhost:29092, set host where is hosted kafka <br/>
+
+### message configuration file example <br/>
 ```
 {
 	"topic": "topic name",
@@ -13,4 +17,4 @@ Script requires path to file as first parameter that contains json description f
 	"payload": {}
 }
 ```
-Script produces messages into localhost:29092 
+
