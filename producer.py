@@ -3,42 +3,59 @@ import json
 import sys
 import uuid
 
+COMMANDS = ['-h', '-f']
 
 
-file_path = sys.argv[1]
+def get_value(command, default=None):
+    command_id = sys.argv.index(command)
+    if command_id > 0:
+        return sys.argv[command + 1]
+    else:
+        if default is not None:
+            return default
+        else:
+            print(command + " is not presented")
+            exit(-1)
+
+
+host = get_value('-h', 'localhost:29092')
+file_path = get_value('-f')
+
 file = open(file_path, 'r')
 message = file.read()
+file.close()
 msg_dict = json.loads(message)
 
-def to_headers_list(headers):
+
+def to_headers_list(headers_map):
     headers_list = []
-    if headers is None:
+    if headers_map is None:
         return []
-    for header in headers:
-        header_val = headers[header].encode('utf-8')
+    for header in headers_map:
+        header_val = headers_map[header].encode('utf-8')
         headers_list.append((header, header_val))
     return headers_list
-    
 
-def get_required(key):
-    if key not in msg_dict:
-        print(key + ' is not presented')
-        exit()
-    else:
-        return msg_dict[key]
 
-def get_opt(key):
-    if key not in msg_dict:
-       print('empty ' + key)
-       return None
+def get_required(field):
+    if field not in msg_dict:
+        print(field + ' is not presented')
+        exit(-1)
     else:
-       return msg_dict[key]
+        return msg_dict[field]
+
+
+def get_opt(field):
+    if field not in msg_dict:
+        print('empty ' + field)
+        return None
+    else:
+        return msg_dict[field]
 
 
 if len(sys.argv) < 2:
     print('path to msg is not specified')
-    exit()
-
+    exit(-1)
 
 headers = get_opt('headers')
 payload = get_required('payload')
@@ -47,19 +64,19 @@ topic = get_required('topic')
 key = str(uuid.uuid4()) if 'key' not in msg_dict else msg_dict['key']
 
 producer = KafkaProducer(
-    bootstrap_servers = 'localhost:29092',
-    security_protocol = 'PLAINTEXT',
-    value_serializer = lambda val: json.dumps(val).encode('utf-8'),
-    key_serializer = lambda s: s.encode('utf-8')
-    )
+    bootstrap_servers=host,
+    security_protocol='PLAINTEXT',
+    value_serializer=lambda val: json.dumps(val).encode('utf-8'),
+    key_serializer=lambda s: s.encode('utf-8')
+)
 
 print(topic)
 
 producer.send(
-    topic = topic,
-    value = payload,
-    key = key,
-    headers = to_headers_list(headers)
+    topic=topic,
+    value=payload,
+    key=key,
+    headers=to_headers_list(headers)
 )
 producer.flush()
-print('sent')
+producer.close()
