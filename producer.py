@@ -9,7 +9,7 @@ COMMANDS = ['-h', '-f']
 def get_value(command, default=None):
     command_id = sys.argv.index(command)
     if command_id > 0:
-        return sys.argv[command + 1]
+        return sys.argv[command_id + 1]
     else:
         if default is not None:
             return default
